@@ -1,0 +1,24 @@
+{% extends "base_page.html" %}
+
+{% block title %}
+Задачи
+{% endblock %}
+
+{% block pagetitle %}
+Задачи
+{% endblock %}
+
+{% block content %}
+<nav class="navbar navbar-default">
+    <div class="container">
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          {% for is_active in task_active_list %}
+          <li class="{{ is_active }}"><a href="/tasks/{{ forloop.counter }}">Задача {{ forloop.counter }}</a></li>
+          {% endfor %}
+        </ul>
+      </div><!--/.nav-collapse -->
+    </div>
+</nav>
+<h3>{{ task_name }}</h3>
+{% endblock %}
