@@ -16,7 +16,14 @@ html5lib = "^1.1"
 django-stubs = "^5.0.0"
 mypy = "^1.10.0"
 types-html5lib = "^1.1.11.20240228"
+babel = "^2.15.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "django_edu.settings"

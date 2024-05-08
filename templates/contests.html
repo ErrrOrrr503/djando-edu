@@ -26,7 +26,7 @@
 <h3>Добавить новый контест</h3>
 <form method="post">
     <label for="new_contest_name">Название</label>
-    <input type="text" class="form-control input-default" name="new_contest_name" id="new_contest_name">
+    <input type="text" class="form-control input-default" name="new_contest_name" id="new_contest_name"></input>
     {% if contest_name_error %}
     <div class="alert alert-danger" role="alert">
         <strong>Ошибка ввода:</strong>{{ contest_name_error }}

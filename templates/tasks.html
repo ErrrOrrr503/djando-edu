@@ -9,21 +9,97 @@
 {% endblock %}
 
 {% block content %}
+{% if user_is_admin %}
+<h2>Добавить новую задачу</h2>
+<form method="post">
+    <input type="hidden" name="form_descr" value="task_type"></input>
+    <h3>Тип задачи</h3>
+    <div class="d-block my-3">
+        <!-- last one with checked= will be checked => leave first(default) variant unconditionally checked -->
+        <div class="custom-control custom-radio">
+            <input id="text_ans" name="ans_type" type="radio" value="text_ans" class="custom-control-input" {% if ans_is_text %} checked="" {% endif %} required=""></input>
+            <label class="custom-control-label" for="text_ans">С ответом в виде текста</label>
+        </div>
+        <div class="custom-control custom-radio">
+            <input id="code_ans" name="ans_type" type="radio" value="code_ans" class="custom-control-input" {% if ans_is_code %} checked="" {% endif %} required=""></input>
+            <label class="custom-control-label" for="code_ans">С ответом в виде кода</label>
+        </div>
+    </div>
+    <p>Изменение типа задачи сбросит остальные поля.</p>
+    <p><button type="submit" class="btn btn-default" id="set_task_type">Применить</button></p>
+</form>
+<form method="post">
+    <input type="hidden" name="form_descr" value="task_data"></input>
+    <input type="hidden" name="ans_is_text" value="{{ ans_is_text }}"></input>
+    <input type="hidden" name="ans_is_code" value="{{ ans_is_code }}"></input>
+    <label for="new_task_name">Название</label>
+    <input type="text" class="form-control input-default" name="new_task_name" id="new_task_name"></input>
+    {% if task_name_error %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Ошибка ввода:</strong>{{ task_name_error }}
+    </div>
+    {% endif %}
+    <label for="new_task_text">Условие</label>
+    <textarea name="new_task_text" id="new_task_text" rows="13"></textarea>
+    {% if task_text_error %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Ошибка ввода:</strong>{{ task_text_error }}
+    </div>
+    {% endif %}
+    {% if ans_is_text %}
+    <label for="new_task_name">Текст ответа</label>
+    <input type="text" class="form-control input-default" name="new_task_ref_ans" id="new_task_ref_ans"></input>
+    {% if task_ref_ans_error %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Ошибка ввода:</strong>{{ task_ref_ans_error }}
+    </div>
+    {% endif %}
+    {% endif %}
+    {% if ans_is_code %}
+    Тесты нужно будет добавить на странице вновь созданной задачи.
+    {% endif %}
+    <p><button type="submit" class="btn btn-default" id="add_task">Добавить задачу</button></p>
+</form>
+{% endif %}
 {% if task_active_list_is_empty %}
 В этом контесте пока нет задач...
 {% else %}
-<nav class="navbar navbar-default">
+<nav class="navbar navbar-dark bg-dark navbar-expand-md">
     <div class="container">
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav mr-auto">
+                {% for is_active in task_active_list %}
+                <li class="nav_item {{ is_active }}"><a class="nav-link" href="{{ forloop.counter }}">Задача {{ forloop.counter }}</a></li>
+                {% endfor %}
+              </ul>
+        </div>
       <div class="navbar-collapse collapse">
         <ul class="nav navbar-nav">
-          {% for is_active in task_active_list %}
-          <li class="{{ is_active }}"><a href="/tasks/{{ forloop.counter }}">Задача {{ forloop.counter }}</a></li>
-          {% endfor %}
+
         </ul>
       </div><!--/.nav-collapse -->
     </div>
 </nav>
-<h3>{{ task_name }}</h3>
-<p>{{ task_text }}</p>
+<h2>{{ task_name }}</h2>
+{% if user_is_admin %}
+<form method="post">
+    <input type="hidden" name="form_descr" value="task_delete"></input>
+    <button type="submit" class="btn btn-xs btn-danger" name="task_to_delete_id" id="task_to_delete_id" value="{{ task_id }}">Удалить задачу</button>
+</form>
+{% endif %}
+{% autoescape off %}
+{{ task_text }}
+{% endautoescape %}
+<form method="post">
+    <input type="hidden" name="form_descr" value="task_ans"></input>
+    {% if ans_is_text %}
+    <label for="task_ans">Текст ответа</label>
+    <input type="text" class="form-control input-default" name="task_ans" id="task_ans"></input>
+    {% endif %}
+    {% if ans_is_code %}
+    <label for="task_code">Текст программы</label>
+    <textarea name="task_code" id="task_code" rows="13"></textarea>
+    {% endif %}
+</form>
 {% endif %}
 {% endblock %}

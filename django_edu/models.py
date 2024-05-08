@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext as _
 import re
 from html5lib import HTMLParser, html5parser
 
@@ -7,15 +8,11 @@ class Test(models.Model):
     """
     Model that holds input & output for a program
     """
-    id : models.IntegerField = models.IntegerField(primary_key=True, unique=True)
-    test_input: models.TextField = models.TextField()
-    test_output: models.TextField = models.TextField()
+    #id = models.IntegerField(primary_key=True, unique=True)
+    test_input = models.TextField()
+    test_output = models.TextField()
 
     # TODO: checkers
-
-    def __init__(self, test_input: str, test_output: str):
-        self.set_input
-        self.set_output
 
     def set_input(self, test_input: str) -> None:
         self.test_input = test_input
@@ -66,44 +63,36 @@ class Task(models.Model):
     MAX_NAME_LENGTH = 64
     MAX_TEXT_LENGTH = 1000
     MAX_ANS_LENGTH = 256
-    id : models.IntegerField = models.IntegerField(primary_key=True, unique=True)
-    name: models.CharField = models.CharField(max_length=MAX_NAME_LENGTH)
-    text: models.TextField = models.TextField(max_length=MAX_TEXT_LENGTH)
-    ans_type: models.CharField = models.CharField(max_length=1,
+    #id = models.IntegerField(primary_key=True, unique=True)
+    name = models.CharField(max_length=MAX_NAME_LENGTH)
+    text= models.TextField(max_length=MAX_TEXT_LENGTH)
+    ans_type = models.CharField(max_length=1,
                                                   choices=AnsType.choices,
-                                                  default=AnsType.text)
-    ref_ans: models.CharField = models.CharField(max_length=MAX_ANS_LENGTH, null=True)
-    tests: models.JSONField = models.JSONField(default=list, null=True)
+                                                  default=AnsType.code)
+    ref_ans = models.CharField(max_length=MAX_ANS_LENGTH, null=True)
+    tests = models.JSONField(default=list, null=True)
 
-    def __init__(self, name: str, text: str, ans_type: AnsType, ref_ans: str | None = None):
-        self.set_name(name)
-        self.set_text(text)
-        self.ans_type = ans_type
-        if self.ans_type == self.AnsType.text:
-            if isinstance(ref_ans, str):
-                self.set_ref_ans(ref_ans)
-            else:
-                raise self.TaskRefAnsError("For text answer task, ref ans is mandatory")
 
     def set_ref_ans(self, ref_ans: str) -> None:
         if not isinstance(ref_ans, str):
             raise TypeError('"ref_ans" must be a string instance')
         if len(ref_ans) > self.MAX_ANS_LENGTH:
-            raise self.TaskRefAnsError('Too long reference answer for a task')
+            raise self.TaskRefAnsError(_('Too long reference answer for a task'))
         if len(ref_ans) == 0:
-            raise self.TaskRefAnsError('Task reference answer must not be empty')
+            raise self.TaskRefAnsError(_('Task reference answer must not be empty'))
+        self.ans_type = self.AnsType.text
         self.ref_ans = ref_ans
 
     def set_name(self, name: str) -> None:
         if not isinstance(name, str):
             raise TypeError('"name" must be a string instance')
         if len(name) > self.MAX_NAME_LENGTH:
-            raise self.TaskNameError('Too long name for a task')
+            raise self.TaskNameError(_('Too long name for a task'))
         if len(name) == 0:
-            raise self.TaskNameError('Task name must not be empty')
+            raise self.TaskNameError(_('Task name must not be empty'))
         if (re.search(r'<([A-Za-z][A-Za-z0-9]*)(([^>])|(\n))*>(((.)|(\n))*)</\1>', name)
                 != None):
-            raise self.TaskNameError('Task name must not contain html')
+            raise self.TaskNameError(_('Task name must not contain html'))
         # now name is ok: not empty plaintext that fits in MAX_NAME_LENGTH.
         self.name = name
 
@@ -111,12 +100,12 @@ class Task(models.Model):
         if not isinstance(text, str):
             raise TypeError('"text" must be a string instance')
         if len(text) > self.MAX_TEXT_LENGTH:
-            raise self.TaskTextError('Too long text for a task')
+            raise self.TaskTextError(_('Too long text for a task'))
         if len(text) == 0:
-            raise self.TaskTextError('Task text must not be empty')
+            raise self.TaskTextError(_('Task text must not be empty'))
         if (re.search(r'<(script)(([^>])|(\n))*>(((.)|(\n))*)</\1>', text)
                 != None):
-            raise self.TaskTextError('Task text must not contain script')
+            raise self.TaskTextError(_('Task text must not contain script'))
         html_parser = HTMLParser(strict=True)
         try:
             html_parser.parse('<!DOCTYPE html><html>' + text +' </html>')
@@ -124,18 +113,15 @@ class Task(models.Model):
             raise self.TaskTextError('HTML error: {err}'.format(err=repr(e)))
         self.text = text
 
-    def get_test_ids(self) -> list[int]:
-        return self.tests
-
     def get_tests(self) -> list[Test]:
-        ids_list = self.get_test_ids()
+        ids_list = self.tests
         tests_list: list[Test] = []
         for id in ids_list:
             tests_list.append(Test.objects.get(id=id))
         return tests_list
 
     def append_test(self, test_id: int) -> None:
-        ids_list = self.get_test_ids()
+        ids_list = self.tests
         ids_list.append(test_id)
         self.tests = ids_list
 
@@ -161,37 +147,37 @@ class Contest(models.Model):
         """ Provide ability to detect specific error """
 
     MAX_NAME_LENGTH = 128
-    id : models.IntegerField = models.IntegerField(primary_key=True, unique=True)
-    tasks: models.JSONField = models.JSONField(default=list)
-    name: models.CharField = models.CharField(max_length=MAX_NAME_LENGTH)
+    #id = models.IntegerField(primary_key=True, unique=True)
+    tasks = models.JSONField(default=list)
+    name = models.CharField(max_length=MAX_NAME_LENGTH)
 
     def set_name(self, name: str) -> None:
         if not isinstance(name, str):
             raise TypeError('"name" must be a string instance')
         if len(name) > self.MAX_NAME_LENGTH:
-            raise self.ContestNameError('Too long name for a contest')
+            raise self.ContestNameError(_('Too long name for a contest'))
         if len(name) == 0:
-            raise self.ContestNameError('Contest name must not be empty')
+            raise self.ContestNameError(_('Contest name must not be empty'))
         if (re.search(r'<([A-Za-z][A-Za-z0-9]*)(([^>])|(\n))*>(((.)|(\n))*)</\1>', name)
                 != None):
-            raise self.ContestNameError('Contest name must not contain html')
+            raise self.ContestNameError(_('Contest name must not contain html'))
         # now name is ok: not empty plaintext that fits in MAX_NAME_LENGTH.
         for contest in Contest.objects.all():
             if contest.name == name:
-                raise self.ContestNameError('Contest name must be unique')
+                raise self.ContestNameError(_('Contest name must be unique'))
         self.name = name
 
-    def get_task_ids(self) -> list[int]:
-        return self.tasks
-
     def get_tasks(self) -> list[Task]:
-        ids_list = self.get_task_ids()
+        ids_list = self.tasks
         tasks_list: list[Task] = []
-        for id in ids_list:
-            tasks_list.append(Task.objects.get(id=id))
+        for task_id in ids_list:
+            tasks_list.append(Task.objects.get(id=task_id))
         return tasks_list
 
     def append_task(self, task_id: int) -> None:
-        ids_list = self.get_task_ids()
+        ids_list = self.tasks
         ids_list.append(task_id)
         self.tasks = ids_list
+
+    def delete_task(self, task_id: int) -> None:
+        self.tasks.remove(task_id)

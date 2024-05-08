@@ -1,4 +1,12 @@
 body {
-    padding-top: 50px;
+    padding-top: 70px;
     padding-bottom: 30px;
+}
+
+h1, h2 {
+    border-bottom: 1px solid #e9ecef;
+}
+
+textarea {
+    width: 100%;
 }
