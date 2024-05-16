@@ -17,6 +17,7 @@
     <a href="/tasks/{{ contest_id }}/">{{ contest_name }}</a>
     {% if user_is_admin %}
     <form method="post">
+        {% csrf_token %}
         <button type="submit" class="btn btn-xs btn-danger" name="delete_contest" id="delete_contest" value="{{ contest_id }}">Удалить</button>
     </form>
     {% endif %}
@@ -25,6 +26,7 @@
 {% if user_is_admin %}
 <h3>Добавить новый контест</h3>
 <form method="post">
+    {% csrf_token %}
     <label for="new_contest_name">Название</label>
     <input type="text" class="form-control input-default" name="new_contest_name" id="new_contest_name"></input>
     {% if contest_name_error %}
@@ -32,7 +34,7 @@
         <strong>Ошибка ввода:</strong>{{ contest_name_error }}
     </div>
     {% endif %}
-    <p><button type="submit" class="btn btn-default" id="add_contest">Добавить</button></p>
+    <p><button type="submit" class="btn btn-primary" id="add_contest">Добавить</button></p>
 </form>
 {% endif %}
 {% endblock %}

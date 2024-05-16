@@ -12,6 +12,7 @@
 {% if user_is_admin %}
 <h2>Добавить новую задачу</h2>
 <form method="post">
+    {% csrf_token %}
     <input type="hidden" name="form_descr" value="task_type"></input>
     <h3>Тип задачи</h3>
     <div class="d-block my-3">
@@ -26,9 +27,10 @@
         </div>
     </div>
     <p>Изменение типа задачи сбросит остальные поля.</p>
-    <p><button type="submit" class="btn btn-default" id="set_task_type">Применить</button></p>
+    <p><button type="submit" class="btn btn-primary" id="set_task_type">Применить</button></p>
 </form>
 <form method="post">
+    {% csrf_token %}
     <input type="hidden" name="form_descr" value="task_data"></input>
     <input type="hidden" name="ans_is_text" value="{{ ans_is_text }}"></input>
     <input type="hidden" name="ans_is_code" value="{{ ans_is_code }}"></input>
@@ -58,7 +60,7 @@
     {% if ans_is_code %}
     Тесты нужно будет добавить на странице вновь созданной задачи.
     {% endif %}
-    <p><button type="submit" class="btn btn-default" id="add_task">Добавить задачу</button></p>
+    <p><button type="submit" class="btn btn-primary" id="add_task">Добавить задачу</button></p>
 </form>
 {% endif %}
 {% if task_active_list_is_empty %}
@@ -83,6 +85,7 @@
 <h2>{{ task_name }}</h2>
 {% if user_is_admin %}
 <form method="post">
+    {% csrf_token %}
     <input type="hidden" name="form_descr" value="task_delete"></input>
     <button type="submit" class="btn btn-xs btn-danger" name="task_to_delete_id" id="task_to_delete_id" value="{{ task_id }}">Удалить задачу</button>
 </form>
@@ -91,6 +94,7 @@
 {{ task_text }}
 {% endautoescape %}
 <form method="post">
+    {% csrf_token %}
     <input type="hidden" name="form_descr" value="task_ans"></input>
     {% if ans_is_text %}
     <label for="task_ans">Текст ответа</label>

@@ -10,3 +10,9 @@ h1, h2 {
 textarea {
     width: 100%;
 }
+
+.container-signin {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+}

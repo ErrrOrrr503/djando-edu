@@ -23,5 +23,6 @@ urlpatterns = [
     path('contests/', views.contests),
     path('tasks/<int:contest_id>/', views.tasks),
     path('tasks/<int:contest_id>/<int:task_num>', views.tasks),
+    path('login/', views.login),
     path('admin/', admin.site.urls),
 ]

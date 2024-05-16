@@ -1,0 +1,33 @@
+{% extends "base_page.html" %}
+
+{% block title %}
+Вход
+{% endblock %}
+
+{% block pagetitle %}
+Вход
+{% endblock %}
+
+{% block content_extra_classes %}
+container-signin
+{% endblock %}
+
+{% block content %}
+<form class="form-signin" method="post">
+    {% csrf_token %}
+    <div class="form-label-group">
+        <input id="login" name="login" class="form-control" placeholder="Логин" required="" autofocus="">
+        <label for="login">Логин</label>
+    </div>
+    <div class="form-label-group">
+        <input type="password" id="password" name="password" class="form-control" placeholder="Пароль" required="">
+        <label for="password">Пароль</label>
+    </div>
+    {% if auth_error %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Неверный логин или пароль</strong>
+    </div>
+    {% endif %}
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Войти</button>
+</form>
+{% endblock %}

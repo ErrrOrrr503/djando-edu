@@ -2,20 +2,62 @@ from typing import Any
 
 from django.shortcuts import render
 from django.core.cache import cache
-from django.http import HttpRequest, HttpResponse, HttpResponseNotFound
+from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 from django.utils.translation import gettext as _
+from django.contrib import auth
 
 from django_edu.models import Contest
 from django_edu.models import Task
 
+def handle_misc_actions(request: HttpRequest) -> None:
+    """
+    Basically, base_page actions handler.
+    Must be called at beginning of each view before context init.
+    """
+    if request.method == "POST":
+        action = request.POST.get('misc_action')
+        if action == 'logout':
+            auth.logout(request)
+
+def init_login_context(request: HttpRequest, context: dict[str, Any]) -> dict[str, Any]:
+    if request.user.is_authenticated:
+        context['user_logged_in'] = True
+        context['user_login'] = request.user.username
+        context['user_is_admin'] = request.user.groups.filter(name='teachers')
+    return context
 
 def index(request: HttpRequest) -> HttpResponse:
-    return render(request, "index.html")
+    handle_misc_actions(request)
+    context: dict[str, Any] = {}
+    context = init_login_context(request, context)
+    return render(request, "index.html", context=context)
+
+def login(request: HttpRequest) -> HttpResponse:
+    handle_misc_actions(request)
+    context: dict[str, Any] = {}
+    context = init_login_context(request, context)
+
+    if request.method == 'GET':
+        # on GET - save prev page, on POST use
+        login_prev_page = request.META.get('HTTP_REFERER', '/')
+        request.session['login_prev_page'] = login_prev_page
+
+    if request.method == 'POST':
+        login_prev_page = request.session.get('login_prev_page')
+        username = request.POST.get('login')
+        password = request.POST.get('password')
+        user = auth.authenticate(request, username=username, password=password)
+        if user is not None:
+            auth.login(request, user)
+            return HttpResponseRedirect(login_prev_page)
+        else:
+            context['auth_error'] = True
+    return render(request, "login.html", context=context)
 
 def contests(request: HttpRequest) -> HttpResponse:
+    handle_misc_actions(request)
     context: dict[str, Any] = {}
-    #context["user_is_admin"] = True if request.session.get('user_is_admin') else False
-    context["user_is_admin"] = True
+    context = init_login_context(request, context)
 
     if request.method == "POST":
         new_contest_name = request.POST.get('new_contest_name')
@@ -47,9 +89,9 @@ def contests(request: HttpRequest) -> HttpResponse:
         task in a contest (i.e. last unsolved, first, saved, etc).
 """
 def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpResponse:
+    handle_misc_actions(request)
     context: dict[str, Any] = {}
-    #context["user_is_admin"] = True if request.session.get('user_is_admin') else False
-    context["user_is_admin"] = True
+    context = init_login_context(request, context)
     context['ans_is_text'] = True
 
     try:
