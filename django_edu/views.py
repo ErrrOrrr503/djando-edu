@@ -8,6 +8,7 @@ from django.contrib import auth
 
 from django_edu.models import Contest
 from django_edu.models import Task
+from django_edu.checker import Checker
 
 def handle_misc_actions(request: HttpRequest) -> None:
     """
@@ -121,6 +122,7 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
                 new_task.set_text(task_text)
                 if request.POST.get('ans_is_text'):
                     new_task.set_ref_ans(task_ref_ans)
+                new_task.linked_contest = contest
                 new_task.save()
                 contest.append_task(new_task.id)
                 contest.save()
@@ -131,12 +133,25 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
             except Task.TaskRefAnsError as e:
                 context['task_ref_ans_error'] = str(e)
             except Exception as e:
-                raise RuntimeError("Task __init__ (args validators) is broken")
+                raise RuntimeError('Task args validators are broken')
         elif form_descr == 'task_delete':
-            task_id = int(request.POST.get('task_to_delete_id'))
+            task_id_str = request.POST.get('task_to_delete_id')
+            if task_id_str is None:
+                raise RuntimeError('HTML Template is broken')
+            task_id = int(task_id_str)
             Task.objects.get(id=task_id).delete()
             contest.delete_task(task_id)
             contest.save()
+        elif form_descr == 'task_ans':
+            task_id_str = request.POST.get('task_ans_id')
+            task_ans = request.POST.get('task_ans')
+            if task_id_str is None or task_ans is None:
+                raise RuntimeError('HTML Template is broken')
+            task_id = int(task_id_str)
+            task = Task.objects.get(id=task_id)
+            checker = Checker()
+            checker.check(task, task_ans)
+            context['ans_report'] = checker.report
 
     # init dictionary for saved task nums.
     if not request.session.get('saved_task_nums'):

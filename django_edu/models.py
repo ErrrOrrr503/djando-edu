@@ -4,21 +4,61 @@ import re
 from html5lib import HTMLParser, html5parser
 
 
-class Test(models.Model):
+class Contest(models.Model):
     """
-    Model that holds input & output for a program
+    Model representing a contest
+
+    Attributes
+    ----------
+    MAX_NAME_LENGTH : int
+        Maximum length of contest name
+    tasks : models.JSONField
+        List of tasks in json format (for orm)
+    name : models.CharField
+        Contest name
     """
+
+    class ContestNameError(ValueError):
+        """ Provide ability to detect specific error """
+
+    class ContestTextError(ValueError):
+        """ Provide ability to detect specific error """
+
+    MAX_NAME_LENGTH = 128
     #id = models.IntegerField(primary_key=True, unique=True)
-    test_input = models.TextField()
-    test_output = models.TextField()
+    tasks = models.JSONField(default=list)
+    name = models.CharField(max_length=MAX_NAME_LENGTH)
 
-    # TODO: checkers
+    def set_name(self, name: str) -> None:
+        if not isinstance(name, str):
+            raise TypeError('"name" must be a string instance')
+        if len(name) > self.MAX_NAME_LENGTH:
+            raise self.ContestNameError(_('Too long name for a contest'))
+        if len(name) == 0:
+            raise self.ContestNameError(_('Contest name must not be empty'))
+        if (re.search(r'<([A-Za-z][A-Za-z0-9]*)(([^>])|(\n))*>(((.)|(\n))*)</\1>', name)
+                != None):
+            raise self.ContestNameError(_('Contest name must not contain html'))
+        # now name is ok: not empty plaintext that fits in MAX_NAME_LENGTH.
+        for contest in Contest.objects.all():
+            if contest.name == name:
+                raise self.ContestNameError(_('Contest name must be unique'))
+        self.name = name
 
-    def set_input(self, test_input: str) -> None:
-        self.test_input = test_input
+    def get_tasks(self) -> list['Task']:
+        ids_list = self.tasks
+        tasks_list: list[Task] = []
+        for task_id in ids_list:
+            tasks_list.append(Task.objects.get(id=task_id))
+        return tasks_list
 
-    def set_output(self, test_output: str) -> None:
-        self.test_output = test_output
+    def append_task(self, task_id: int) -> None:
+        ids_list = self.tasks
+        ids_list.append(task_id)
+        self.tasks = ids_list
+
+    def delete_task(self, task_id: int) -> None:
+        self.tasks.remove(task_id)
 
 
 class Task(models.Model):
@@ -71,7 +111,7 @@ class Task(models.Model):
                                                   default=AnsType.code)
     ref_ans = models.CharField(max_length=MAX_ANS_LENGTH, null=True)
     tests = models.JSONField(default=list, null=True)
-
+    linked_contest = models.ForeignKey(Contest, on_delete=models.CASCADE, default=None)
 
     def set_ref_ans(self, ref_ans: str) -> None:
         if not isinstance(ref_ans, str):
@@ -113,7 +153,7 @@ class Task(models.Model):
             raise self.TaskTextError('HTML error: {err}'.format(err=repr(e)))
         self.text = text
 
-    def get_tests(self) -> list[Test]:
+    def get_tests(self) -> list['Test']:
         ids_list = self.tests
         tests_list: list[Test] = []
         for id in ids_list:
@@ -126,58 +166,17 @@ class Task(models.Model):
         self.tests = ids_list
 
 
-class Contest(models.Model):
+class Test(models.Model):
     """
-    Model representing a contest
-
-    Attributes
-    ----------
-    MAX_NAME_LENGTH : int
-        Maximum length of contest name
-    tasks : models.JSONField
-        List of tasks in json format (for orm)
-    name : models.CharField
-        Contest name
+    Model that holds input & output for a program
     """
-
-    class ContestNameError(ValueError):
-        """ Provide ability to detect specific error """
-
-    class ContestTextError(ValueError):
-        """ Provide ability to detect specific error """
-
-    MAX_NAME_LENGTH = 128
     #id = models.IntegerField(primary_key=True, unique=True)
-    tasks = models.JSONField(default=list)
-    name = models.CharField(max_length=MAX_NAME_LENGTH)
+    test_input = models.TextField()
+    test_output = models.TextField()
+    linked_task = models.ForeignKey(Task, on_delete=models.CASCADE, default=None)
 
-    def set_name(self, name: str) -> None:
-        if not isinstance(name, str):
-            raise TypeError('"name" must be a string instance')
-        if len(name) > self.MAX_NAME_LENGTH:
-            raise self.ContestNameError(_('Too long name for a contest'))
-        if len(name) == 0:
-            raise self.ContestNameError(_('Contest name must not be empty'))
-        if (re.search(r'<([A-Za-z][A-Za-z0-9]*)(([^>])|(\n))*>(((.)|(\n))*)</\1>', name)
-                != None):
-            raise self.ContestNameError(_('Contest name must not contain html'))
-        # now name is ok: not empty plaintext that fits in MAX_NAME_LENGTH.
-        for contest in Contest.objects.all():
-            if contest.name == name:
-                raise self.ContestNameError(_('Contest name must be unique'))
-        self.name = name
+    def set_input(self, test_input: str) -> None:
+        self.test_input = test_input
 
-    def get_tasks(self) -> list[Task]:
-        ids_list = self.tasks
-        tasks_list: list[Task] = []
-        for task_id in ids_list:
-            tasks_list.append(Task.objects.get(id=task_id))
-        return tasks_list
-
-    def append_task(self, task_id: int) -> None:
-        ids_list = self.tasks
-        ids_list.append(task_id)
-        self.tasks = ids_list
-
-    def delete_task(self, task_id: int) -> None:
-        self.tasks.remove(task_id)
+    def set_output(self, test_output: str) -> None:
+        self.test_output = test_output

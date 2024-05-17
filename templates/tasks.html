@@ -101,9 +101,21 @@
     <input type="text" class="form-control input-default" name="task_ans" id="task_ans"></input>
     {% endif %}
     {% if ans_is_code %}
-    <label for="task_code">Текст программы</label>
-    <textarea name="task_code" id="task_code" rows="13"></textarea>
+    <label for="task_ans">Текст программы</label>
+    <textarea name="task_ans" id="task_ans" rows="13"></textarea>
     {% endif %}
+    {% if ans_report %}
+        {% if ans_is_correct %}
+        <div class="alert alert-success" role="alert">
+            {{ ans_report }}
+        </div>
+        {% else %}
+        <div class="alert alert-danger" role="alert">
+            {{ ans_report }}
+        </div>
+        {% endif %}
+    {% endif %}
+    <button type="submit" class="btn btn-primary" name="task_ans_id" id="task_ans_id" value="{{ task_id }}">Отправить</button>
 </form>
 {% endif %}
 {% endblock %}
