@@ -24,8 +24,10 @@
                 </li>
             </ul>
             {% if user_logged_in %}
-            <ul class="navbar-nav flex-row ml-md-auto d-none d-md-flex">
-                <li class="nav-item">{{ user_login }}</li>
+            <ul class="navbar-nav flex-row ml-md-auto d-md-flex">
+                <li class="nav-item active">
+                    <a class="nav-link">{{ user_login }}</a>
+                </li>
             </ul>
             <form method="post">
                 {% csrf_token %}

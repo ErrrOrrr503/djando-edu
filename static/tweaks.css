@@ -16,3 +16,34 @@ textarea {
     max-width: 420px;
     margin: 0 auto;
 }
+
+.text-ok {
+    color:green;
+}
+
+.text-fail {
+    color:red;
+}
+
+.test-io {
+    display: inline-block;
+    max-height: 6.0em;
+    line-height: 1.5em;
+    max-width: 35%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.test-io-full {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.multiline-text {
+    white-space: pre-line;
+    text-wrap: nowrap;
+}
+
+.table-bordered-black {
+    border: black 1px solid !important;
+}

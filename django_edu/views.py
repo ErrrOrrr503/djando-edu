@@ -8,6 +8,7 @@ from django.contrib import auth
 
 from django_edu.models import Contest
 from django_edu.models import Task
+from django_edu.models import Test
 from django_edu.checker import Checker
 
 def handle_misc_actions(request: HttpRequest) -> None:
@@ -93,7 +94,12 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
     handle_misc_actions(request)
     context: dict[str, Any] = {}
     context = init_login_context(request, context)
-    context['ans_is_text'] = True
+    context['ans_is_text'] = request.session.get('ans_is_text')
+    context['ans_is_code'] = request.session.get('ans_is_code')
+    if context['ans_is_text'] is None:
+        context['ans_is_text'] = True
+    if context['ans_is_code'] is None:
+        context['ans_is_code'] = False
 
     try:
         contest = Contest.objects.get(id=contest_id)
@@ -109,9 +115,13 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
             if ans_type == 'text_ans':
                 context['ans_is_text'] = True
                 context['ans_is_code'] = False
+                request.session['ans_is_text'] = True
+                request.session['ans_is_code'] = False
             elif ans_type == 'code_ans':
                 context['ans_is_code'] = True
                 context['ans_is_text'] = False
+                request.session['ans_is_text'] = False
+                request.session['ans_is_code'] = True
         elif form_descr == 'task_data':
             task_name = request.POST.get('new_task_name') or ''
             task_text = request.POST.get('new_task_text') or ''
@@ -120,7 +130,7 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
                 new_task = Task()
                 new_task.set_name(task_name)
                 new_task.set_text(task_text)
-                if request.POST.get('ans_is_text'):
+                if request.POST.get('ans_is_text') is not None:
                     new_task.set_ref_ans(task_ref_ans)
                 new_task.linked_contest = contest
                 new_task.save()
@@ -142,6 +152,7 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
             Task.objects.get(id=task_id).delete()
             contest.delete_task(task_id)
             contest.save()
+            return HttpResponseRedirect(request.path.rsplit('/', 1)[0])
         elif form_descr == 'task_ans':
             task_id_str = request.POST.get('task_ans_id')
             task_ans = request.POST.get('task_ans')
@@ -149,9 +160,12 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
                 raise RuntimeError('HTML Template is broken')
             task_id = int(task_id_str)
             task = Task.objects.get(id=task_id)
-            checker = Checker()
-            checker.check(task, task_ans)
-            context['ans_report'] = checker.report
+            try:
+                checker = Checker()
+                context['ans_is_correct'] = checker.check(task, task_ans)
+                context['ans_report'] = checker.html_report()
+            except Checker.CheckerAnsException as e:
+                context['ans_error'] = str(e)
 
     # init dictionary for saved task nums.
     if not request.session.get('saved_task_nums'):
@@ -162,7 +176,7 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
     if not saved_task_nums.get(contest_id):
         saved_task_nums[contest_id] = 0
 
-    if task_num != 0:
+    if task_num > 0:
         saved_task_nums[contest_id] = task_num
     cur_active = saved_task_nums[contest_id] or 1
 
@@ -174,4 +188,62 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
         context['task_name'] = tasks[cur_active - 1].name
         context['task_text'] = tasks[cur_active - 1].text
         context['task_id'] = tasks[cur_active - 1].id
+        context['task_ans_type'] = tasks[cur_active - 1].ans_type
     return render(request, "tasks.html", context=context)
+
+
+def tests(request: HttpRequest, task_id: int) -> HttpResponse:
+    handle_misc_actions(request)
+    context: dict[str, Any] = {}
+    context = init_login_context(request, context)
+
+    try:
+        task = Task.objects.get(id=task_id)
+    except:
+        task = None
+    if not task:
+        return HttpResponseNotFound(_('<h1>Task not found</h1>'))
+    context['task_text'] = task.text
+    context['task_name'] = task.name
+
+    if request.method == 'GET':
+        # on GET - save prev page, on POST use
+        tests_prev_page = request.META.get('HTTP_REFERER', '/')
+        request.session['tests_prev_page'] = tests_prev_page
+
+    if request.method == 'POST':
+        tests_prev_page = request.session.get('tests_prev_page')
+        form_descr = request.POST.get('form_descr')
+        if form_descr == 'test_delete':
+            test_to_delete_num_str = request.POST.get('test_to_delete_num')
+            if test_to_delete_num_str is None:
+                raise RuntimeError('HTML Template is broken')
+            test_to_delete_ind = int(test_to_delete_num_str) - 1
+            test_to_delete_id = task.tests[test_to_delete_ind]
+            Test.objects.get(id=test_to_delete_id).delete()
+            task.delete_test(test_to_delete_id)
+            task.save()
+        if form_descr == 'test_add':
+            new_test_input = request.POST.get('new_test_input') or ''
+            new_test_output = request.POST.get('new_test_output') or ''
+            try:
+                new_test = Test()
+                new_test.set_input(new_test_input)
+                new_test.set_output(new_test_output)
+                new_test.linked_task = task
+                new_test.save()
+                task.append_test(new_test.id)
+                task.save()
+            except Test.TestOutputError as e:
+                context['test_output_error'] = str(e)
+            except Test.TestInputError as e:
+                context['test_input_error'] = str(e)
+        if form_descr == 'test_editing_finished':
+            return HttpResponseRedirect(tests_prev_page)
+
+    tests_list: list[Test] = []
+    for test in task.get_tests():
+        tests_list.append(test)
+    context['tests_list'] = tests_list
+
+    return render(request, "tests.html", context=context)

@@ -32,28 +32,28 @@
 <form method="post">
     {% csrf_token %}
     <input type="hidden" name="form_descr" value="task_data"></input>
-    <input type="hidden" name="ans_is_text" value="{{ ans_is_text }}"></input>
-    <input type="hidden" name="ans_is_code" value="{{ ans_is_code }}"></input>
+    {% if ans_is_text %}<input type="hidden" name="ans_is_text" value=""></input>{% endif %}
+    {% if ans_is_code %}<input type="hidden" name="ans_is_code" value=""></input>{% endif %}
     <label for="new_task_name">Название</label>
     <input type="text" class="form-control input-default" name="new_task_name" id="new_task_name"></input>
     {% if task_name_error %}
     <div class="alert alert-danger" role="alert">
-        <strong>Ошибка ввода:</strong>{{ task_name_error }}
+        <strong>Ошибка ввода: </strong>{{ task_name_error }}
     </div>
     {% endif %}
     <label for="new_task_text">Условие</label>
     <textarea name="new_task_text" id="new_task_text" rows="13"></textarea>
     {% if task_text_error %}
     <div class="alert alert-danger" role="alert">
-        <strong>Ошибка ввода:</strong>{{ task_text_error }}
+        <strong>Ошибка ввода: </strong>{{ task_text_error }}
     </div>
     {% endif %}
     {% if ans_is_text %}
-    <label for="new_task_name">Текст ответа</label>
+    <label for="new_task_ref_ans">Текст ответа</label>
     <input type="text" class="form-control input-default" name="new_task_ref_ans" id="new_task_ref_ans"></input>
     {% if task_ref_ans_error %}
     <div class="alert alert-danger" role="alert">
-        <strong>Ошибка ввода:</strong>{{ task_ref_ans_error }}
+        <strong>Ошибка ввода: </strong>{{ task_ref_ans_error }}
     </div>
     {% endif %}
     {% endif %}
@@ -87,8 +87,12 @@
 <form method="post">
     {% csrf_token %}
     <input type="hidden" name="form_descr" value="task_delete"></input>
-    <button type="submit" class="btn btn-xs btn-danger" name="task_to_delete_id" id="task_to_delete_id" value="{{ task_id }}">Удалить задачу</button>
+    <button type="submit" class="btn btn-sm btn-danger" name="task_to_delete_id" id="task_to_delete_id" value="{{ task_id }}">Удалить задачу</button>
 </form>
+{% if task_ans_type == 'C' %}
+<input type="hidden" name="form_descr" value="task_edit_tests"></input>
+<a class="btn btn-sm btn-primary" href="/tests/{{ task_id }}">Редактировать тесты</a>
+{% endif %}
 {% endif %}
 {% autoescape off %}
 {{ task_text }}
@@ -96,22 +100,30 @@
 <form method="post">
     {% csrf_token %}
     <input type="hidden" name="form_descr" value="task_ans"></input>
-    {% if ans_is_text %}
+    {% if task_ans_type == 'T' %}
     <label for="task_ans">Текст ответа</label>
     <input type="text" class="form-control input-default" name="task_ans" id="task_ans"></input>
-    {% endif %}
-    {% if ans_is_code %}
+    {% elif task_ans_type == 'C' %}
     <label for="task_ans">Текст программы</label>
     <textarea name="task_ans" id="task_ans" rows="13"></textarea>
+    {% endif %}
+    {% if ans_error %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Ошибка ввода: </strong>{{ ans_error }}
+    </div>
     {% endif %}
     {% if ans_report %}
         {% if ans_is_correct %}
         <div class="alert alert-success" role="alert">
+            {% autoescape off %}
             {{ ans_report }}
+            {% endautoescape %}
         </div>
         {% else %}
         <div class="alert alert-danger" role="alert">
+            {% autoescape off %}
             {{ ans_report }}
+            {% endautoescape %}
         </div>
         {% endif %}
     {% endif %}

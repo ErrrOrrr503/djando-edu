@@ -107,8 +107,8 @@ class Task(models.Model):
     name = models.CharField(max_length=MAX_NAME_LENGTH)
     text= models.TextField(max_length=MAX_TEXT_LENGTH)
     ans_type = models.CharField(max_length=1,
-                                                  choices=AnsType.choices,
-                                                  default=AnsType.code)
+                                choices=AnsType.choices,
+                                default=AnsType.code)
     ref_ans = models.CharField(max_length=MAX_ANS_LENGTH, null=True)
     tests = models.JSONField(default=list, null=True)
     linked_contest = models.ForeignKey(Contest, on_delete=models.CASCADE, default=None)
@@ -165,12 +165,20 @@ class Task(models.Model):
         ids_list.append(test_id)
         self.tests = ids_list
 
+    def delete_test(self, test_id: int) -> None:
+        self.tests.remove(test_id)
+
 
 class Test(models.Model):
     """
     Model that holds input & output for a program
     """
-    #id = models.IntegerField(primary_key=True, unique=True)
+    class TestOutputError(ValueError):
+        """ Provide ability to detect specific error """
+
+    class TestInputError(ValueError):
+        """ Provide ability to detect specific error """
+
     test_input = models.TextField()
     test_output = models.TextField()
     linked_task = models.ForeignKey(Task, on_delete=models.CASCADE, default=None)
@@ -179,4 +187,8 @@ class Test(models.Model):
         self.test_input = test_input
 
     def set_output(self, test_output: str) -> None:
+        if not isinstance(test_output, str):
+            raise TypeError('"test_output" must be a string instance')
+        if len(test_output) == 0:
+            raise self.TestOutputError(_('Test output must not be empty'))
         self.test_output = test_output

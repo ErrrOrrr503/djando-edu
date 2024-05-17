@@ -1,0 +1,75 @@
+{% extends "base_page.html" %}
+
+{% block title %}
+Тесты для задачи '{{ task_name }}'
+{% endblock %}
+
+{% block pagetitle %}
+Тесты
+{% endblock %}
+
+{% block content %}
+{% if user_is_admin %}
+<h3>Условие</h3>
+{% autoescape off %}
+{{ task_text }}
+{% endautoescape %}
+<h3>Тесты</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Вход программы</th>
+            <th scope="col">Вывод программы</th>
+            <th scope="col"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for test in tests_list %}
+        <tr>
+            <th scope="row">{{ forloop.counter }}</th>
+            <td>
+                <span class="test-io multiline-text">{{ test.test_input }}</span>
+            </td>
+            <td>
+                <span class="test-io multiline-text">{{ test.test_output }}</span>
+            </td>
+            <td>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_descr" value="test_delete"></input>
+                    <button type="submit" class="btn btn-danger btn-sm" id="test_to_delete_num" name="test_to_delete_num" value="{{ forloop.counter }}">Удалить</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="form_descr" value="test_add"></input>
+    <label for="new_test_input">Тестовый ввод</label>
+    <textarea name="new_test_input" id="new_test_input" rows="4"></textarea>
+    {% if test_input_error %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Ошибка ввода: </strong>{{ test_input_error }}
+    </div>
+    {% endif %}
+    <label for="new_test_output">Тестовый вывод</label>
+    <textarea name="new_test_output" id="new_test_output" rows="4"></textarea>
+    {% if test_output_error %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Ошибка ввода: </strong>{{ test_output_error }}
+    </div>
+    {% endif %}
+    <p><button type="submit" class="btn btn-primary" id="add_test">Добавить тест</button></p>
+</form>
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="form_descr" value="test_editing_finished"></input>
+    <p><button type="submit" class="btn btn-success btn-block">Завершить редактирование и вернуться к задаче</button></p>
+</form>
+{% else %}
+Этот раздел не должен быть вам доступен.
+{% endif %}
+{% endblock %}
