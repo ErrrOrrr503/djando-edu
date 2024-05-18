@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-08 01:09+0300\n"
+"POT-Creation-Date: 2024-05-19 00:24+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,54 +19,132 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
 "(n%100>=11 && n%100<=14)? 2 : 3);\n"
-#: django_edu/models.py:87
-msgid "For text answer task, ref ans is mandatory"
-msgstr ""
 
-#: django_edu/models.py:93
-msgid "Too long reference answer for a task"
-msgstr ""
+#: django_edu/checker.py:37
+msgid "<p><strong>Passed!</strong></p>"
+msgstr "<p><strong>Верно!</strong></p>"
 
-#: django_edu/models.py:95
-msgid "Task reference answer must not be empty"
-msgstr ""
+#: django_edu/checker.py:39
+msgid "<p><strong>Failed!</strong></p>"
+msgstr "<p><strong>Не верно!</strong></p>"
 
-#: django_edu/models.py:102
-msgid "Too long name for a task"
-msgstr ""
+#: django_edu/checker.py:41
+#, python-brace-format
+msgid "<p>{passed} tests out of {total} passed.</p>"
+msgstr "<p>{passed} тестов из {total} прошли.</p>"
 
-#: django_edu/models.py:104
-msgid "Task name must not be empty"
+#: django_edu/checker.py:59
+#, python-brace-format
+msgid ""
+"<div class=\"container d-flex\"><div>Test {n}: </div><div class=\"text-"
+"ok\">OK</div></div>"
 msgstr ""
+"<div class=\"container d-flex\"><div>Тест {n}: </div><div class=\"text-"
+"ok\">OK</div></div>"
 
-#: django_edu/models.py:107
-msgid "Task name must not contain html"
+#: django_edu/checker.py:65
+#, python-brace-format
+msgid ""
+"<div class=\"container d-flex\"><div>Test {n}: </div><div class=\"text-"
+"fail\">FAIL</div></div>"
 msgstr ""
+"<div class=\"container d-flex\"><div>Тест {n}: </div><div class=\"text-"
+"fail\">ОШИБКА</div></div>"
 
-#: django_edu/models.py:115
-msgid "Too long text for a task"
+#: django_edu/checker.py:82
+#, python-brace-format
+msgid ""
+"<table class=\"table table-sm table-bordered-black\"><thead class=\"table-"
+"bordered-black\"><tr class=\"table-bordered-black\"><th class=\"table-"
+"bordered-black\" scope=\"col\">Received</th><th class=\"table-bordered-"
+"black\" scope=\"col\">Expected</th></tr></thead><tbody class=\"table-"
+"bordered-black\"><tr class=\"table-bordered-black\"><td class=\"table-"
+"bordered-black\"><span class=\"test-io-full multiline-text\">{received}</"
+"span></td><td class=\"table-bordered-black\"><span class=\"test-io-full "
+"multiline-text\">{expected}</span></td></tr></tbody></table>"
 msgstr ""
+"<table class=\"table table-sm table-bordered-black\"><thead class=\"table-"
+"bordered-black\"><tr class=\"table-bordered-black\"><th class=\"table-"
+"bordered-black\" scope=\"col\">Полученный вывод</th><th class=\"table-bordered-"
+"black\" scope=\"col\">Ожидаемый вывод</th></tr></thead><tbody class=\"table-"
+"bordered-black\"><tr class=\"table-bordered-black\"><td class=\"table-"
+"bordered-black\"><span class=\"test-io-full multiline-text\">{received}</"
+"span></td><td class=\"table-bordered-black\"><span class=\"test-io-full "
+"multiline-text\">{expected}</span></td></tr></tbody></table>"
 
-#: django_edu/models.py:117
-msgid "Task text must not be empty"
+#: django_edu/checker.py:132
+msgid "Answer for a task must not be empty"
+msgstr "Тескт ответа не должен быть пустым"
+
+#: django_edu/checker.py:179
+msgid ""
+"\n"
+"Timed out..."
 msgstr ""
+"\n"
+"Превышено время..."
 
-#: django_edu/models.py:120
-msgid "Task text must not contain script"
-msgstr ""
-
-#: django_edu/models.py:170
+#: django_edu/models.py:40
 msgid "Too long name for a contest"
-msgstr ""
+msgstr "Слишком длинное название контеста"
 
-#: django_edu/models.py:172
+#: django_edu/models.py:42
 msgid "Contest name must not be empty"
-msgstr ""
+msgstr "Название контеста не должно быть пустым"
 
-#: django_edu/models.py:175
+#: django_edu/models.py:45
 msgid "Contest name must not contain html"
-msgstr ""
+msgstr "Название контеста не должно содержать html"
 
-#: django_edu/models.py:179
+#: django_edu/models.py:49
 msgid "Contest name must be unique"
-msgstr ""
+msgstr "Название контеста должно быть уникальным"
+
+#: django_edu/models.py:131
+msgid "Too long reference answer for a task"
+msgstr "Слишком длинный ответ для задачи"
+
+#: django_edu/models.py:133
+msgid "Task reference answer must not be empty"
+msgstr "Ответ для задачи не должен быть пустым"
+
+#: django_edu/models.py:142
+msgid "Too long name for a task"
+msgstr "Слишком длинное название задачи"
+
+#: django_edu/models.py:144
+msgid "Task name must not be empty"
+msgstr "Название задачи не должно быть пустым"
+
+#: django_edu/models.py:147
+msgid "Task name must not contain html"
+msgstr "Название задачи не должно содержать html"
+
+#: django_edu/models.py:156
+msgid "Too long text for a task"
+msgstr "Слишком длинное условие задачи"
+
+#: django_edu/models.py:158
+msgid "Task text must not be empty"
+msgstr "Условие задачи не должно быть пустым"
+
+#: django_edu/models.py:161
+msgid "Task text must not contain script"
+msgstr "Условие задачи не должно содерждать script"
+
+#: django_edu/models.py:166
+#, python-brace-format
+msgid "HTML error: {err}"
+msgstr "Ошибка HTML: {err}"
+
+#: django_edu/models.py:211
+msgid "Test output must not be empty"
+msgstr "Тестовый вывод не должен быть пустым"
+
+#: django_edu/views.py:114
+msgid "<h1>Contest not found</h1>"
+msgstr "<h1>Контест не найден</h1>"
+
+#: django_edu/views.py:215
+msgid "<h1>Task not found</h1>"
+msgstr "<h1>Задача не найдена</h1>"
