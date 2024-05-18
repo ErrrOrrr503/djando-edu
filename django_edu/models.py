@@ -1,6 +1,9 @@
+"""
+Django ORM models.
+"""
+import re
 from django.db import models
 from django.utils.translation import gettext as _
-import re
 from html5lib import HTMLParser, html5parser
 
 
@@ -30,6 +33,7 @@ class Contest(models.Model):
     name = models.CharField(max_length=MAX_NAME_LENGTH)
 
     def set_name(self, name: str) -> None:
+        """ Check and set contest name """
         if not isinstance(name, str):
             raise TypeError('"name" must be a string instance')
         if len(name) > self.MAX_NAME_LENGTH:
@@ -37,7 +41,7 @@ class Contest(models.Model):
         if len(name) == 0:
             raise self.ContestNameError(_('Contest name must not be empty'))
         if (re.search(r'<([A-Za-z][A-Za-z0-9]*)(([^>])|(\n))*>(((.)|(\n))*)</\1>', name)
-                != None):
+                is not None):
             raise self.ContestNameError(_('Contest name must not contain html'))
         # now name is ok: not empty plaintext that fits in MAX_NAME_LENGTH.
         for contest in Contest.objects.all():
@@ -46,6 +50,7 @@ class Contest(models.Model):
         self.name = name
 
     def get_tasks(self) -> list['Task']:
+        """ Get tasks in this contest. """
         ids_list = self.tasks
         tasks_list: list[Task] = []
         for task_id in ids_list:
@@ -53,11 +58,16 @@ class Contest(models.Model):
         return tasks_list
 
     def append_task(self, task_id: int) -> None:
+        """ Add task to this contest. """
         ids_list = self.tasks
         ids_list.append(task_id)
         self.tasks = ids_list
 
     def delete_task(self, task_id: int) -> None:
+        """
+        Unlink task from this contest.
+        Task.delete() must be called manually.
+        """
         self.tasks.remove(task_id)
 
 
@@ -114,6 +124,7 @@ class Task(models.Model):
     linked_contest = models.ForeignKey(Contest, on_delete=models.CASCADE, default=None)
 
     def set_ref_ans(self, ref_ans: str) -> None:
+        """ Check and set task reference ans (for text ans tasks). """
         if not isinstance(ref_ans, str):
             raise TypeError('"ref_ans" must be a string instance')
         if len(ref_ans) > self.MAX_ANS_LENGTH:
@@ -124,6 +135,7 @@ class Task(models.Model):
         self.ref_ans = ref_ans
 
     def set_name(self, name: str) -> None:
+        """ Check and set task name. """
         if not isinstance(name, str):
             raise TypeError('"name" must be a string instance')
         if len(name) > self.MAX_NAME_LENGTH:
@@ -131,12 +143,13 @@ class Task(models.Model):
         if len(name) == 0:
             raise self.TaskNameError(_('Task name must not be empty'))
         if (re.search(r'<([A-Za-z][A-Za-z0-9]*)(([^>])|(\n))*>(((.)|(\n))*)</\1>', name)
-                != None):
+                is not None):
             raise self.TaskNameError(_('Task name must not contain html'))
         # now name is ok: not empty plaintext that fits in MAX_NAME_LENGTH.
         self.name = name
 
     def set_text(self, text: str) -> None:
+        """ Check and set task text (condition). """
         if not isinstance(text, str):
             raise TypeError('"text" must be a string instance')
         if len(text) > self.MAX_TEXT_LENGTH:
@@ -144,28 +157,31 @@ class Task(models.Model):
         if len(text) == 0:
             raise self.TaskTextError(_('Task text must not be empty'))
         if (re.search(r'<(script)(([^>])|(\n))*>(((.)|(\n))*)</\1>', text)
-                != None):
+                is not None):
             raise self.TaskTextError(_('Task text must not contain script'))
         html_parser = HTMLParser(strict=True)
         try:
             html_parser.parse('<!DOCTYPE html><html>' + text +' </html>')
         except html5parser.ParseError as e:
-            raise self.TaskTextError('HTML error: {err}'.format(err=repr(e)))
+            raise self.TaskTextError(_('HTML error: {err}').format(err=repr(e)))
         self.text = text
 
     def get_tests(self) -> list['Test']:
+        """ Get tests, associated with this task. """
         ids_list = self.tests
         tests_list: list[Test] = []
-        for id in ids_list:
-            tests_list.append(Test.objects.get(id=id))
+        for test_id in ids_list:
+            tests_list.append(Test.objects.get(id=test_id))
         return tests_list
 
     def append_test(self, test_id: int) -> None:
+        """ Link test to the task. """
         ids_list = self.tests
         ids_list.append(test_id)
         self.tests = ids_list
 
     def delete_test(self, test_id: int) -> None:
+        """ Unlink test from the task. """
         self.tests.remove(test_id)
 
 
@@ -184,9 +200,11 @@ class Test(models.Model):
     linked_task = models.ForeignKey(Task, on_delete=models.CASCADE, default=None)
 
     def set_input(self, test_input: str) -> None:
+        """ Check and set test input. """
         self.test_input = test_input
 
     def set_output(self, test_output: str) -> None:
+        """ Check and set test output. """
         if not isinstance(test_output, str):
             raise TypeError('"test_output" must be a string instance')
         if len(test_output) == 0:

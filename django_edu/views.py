@@ -1,8 +1,13 @@
+"""
+Django's views mechanism: generating html based on templates.
+"""
 from typing import Any
 
 from django.shortcuts import render
-from django.core.cache import cache
-from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseRedirect
+from django.http import (HttpRequest,
+                         HttpResponse,
+                         HttpResponseNotFound,
+                         HttpResponseRedirect)
 from django.utils.translation import gettext as _
 from django.contrib import auth
 
@@ -22,6 +27,10 @@ def handle_misc_actions(request: HttpRequest) -> None:
             auth.logout(request)
 
 def init_login_context(request: HttpRequest, context: dict[str, Any]) -> dict[str, Any]:
+    """
+    Init context part, that describes login details.
+    Must be called in all views.
+    """
     if request.user.is_authenticated:
         context['user_logged_in'] = True
         context['user_login'] = request.user.username
@@ -29,12 +38,14 @@ def init_login_context(request: HttpRequest, context: dict[str, Any]) -> dict[st
     return context
 
 def index(request: HttpRequest) -> HttpResponse:
+    """ Index page. """
     handle_misc_actions(request)
     context: dict[str, Any] = {}
     context = init_login_context(request, context)
     return render(request, "index.html", context=context)
 
 def login(request: HttpRequest) -> HttpResponse:
+    """ Login page. """
     handle_misc_actions(request)
     context: dict[str, Any] = {}
     context = init_login_context(request, context)
@@ -52,11 +63,11 @@ def login(request: HttpRequest) -> HttpResponse:
         if user is not None:
             auth.login(request, user)
             return HttpResponseRedirect(login_prev_page)
-        else:
-            context['auth_error'] = True
+        context['auth_error'] = True
     return render(request, "login.html", context=context)
 
 def contests(request: HttpRequest) -> HttpResponse:
+    """ Contests page. Here user choses a contest"""
     handle_misc_actions(request)
     context: dict[str, Any] = {}
     context = init_login_context(request, context)
@@ -72,8 +83,6 @@ def contests(request: HttpRequest) -> HttpResponse:
                 new_contest.save()
             except Contest.ContestNameError as e:
                 context['contest_name_error'] = str(e)
-            except Exception as e:
-                raise RuntimeError("Contest name checker is broken")
         elif contest_to_remove_id_str:
             # process contest deletion
             Contest.objects.get(id=int(contest_to_remove_id_str)).delete()
@@ -85,12 +94,8 @@ def contests(request: HttpRequest) -> HttpResponse:
         context["contest_list_is_empty"] = True
     return render(request, "contests.html", context=context)
 
-"""
-        task_num of the task in a contest. Is displayed to human!
-        That means starts from 1. 0 is reserved value for default
-        task in a contest (i.e. last unsolved, first, saved, etc).
-"""
 def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpResponse:
+    """ Tasks page. Represents selected contest. """
     handle_misc_actions(request)
     context: dict[str, Any] = {}
     context = init_login_context(request, context)
@@ -103,7 +108,7 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
 
     try:
         contest = Contest.objects.get(id=contest_id)
-    except:
+    except Exception:
         contest = None
     if not contest:
         return HttpResponseNotFound(_('<h1>Contest not found</h1>'))
@@ -142,8 +147,6 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
                 context['task_text_error'] = str(e)
             except Task.TaskRefAnsError as e:
                 context['task_ref_ans_error'] = str(e)
-            except Exception as e:
-                raise RuntimeError('Task args validators are broken')
         elif form_descr == 'task_delete':
             task_id_str = request.POST.get('task_to_delete_id')
             if task_id_str is None:
@@ -172,7 +175,10 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
         request.session['saved_task_nums'] = {contest_id: 0}
     saved_task_nums = request.session.get('saved_task_nums')
     if not isinstance(saved_task_nums, dict):
-        raise RuntimeError('"saved_task_nums" session var must be dict[contest_id:task_num], but it is {type}'.format(type=type(saved_task_nums)))
+        raise RuntimeError(
+            '"saved_task_nums" session var must be dict[contest_id:task_num],'
+            f' but it is {type(saved_task_nums)}'
+        )
     if not saved_task_nums.get(contest_id):
         saved_task_nums[contest_id] = 0
 
@@ -180,26 +186,30 @@ def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpRespo
         saved_task_nums[contest_id] = task_num
     cur_active = saved_task_nums[contest_id] or 1
 
-    tasks = contest.get_tasks()
-    context['task_active_list'] = [ 'active' if cur_active == (task_idx + 1) else '' for task_idx in range(len(tasks)) ]
+    tasks_list = contest.get_tasks()
+    context['task_active_list'] = [
+        'active' if cur_active == (task_idx + 1)
+        else '' for task_idx in range(len(tasks_list))
+    ]
     if len(context["task_active_list"]) == 0:
         context['task_active_list_is_empty'] = True
     else:
-        context['task_name'] = tasks[cur_active - 1].name
-        context['task_text'] = tasks[cur_active - 1].text
-        context['task_id'] = tasks[cur_active - 1].id
-        context['task_ans_type'] = tasks[cur_active - 1].ans_type
+        context['task_name'] = tasks_list[cur_active - 1].name
+        context['task_text'] = tasks_list[cur_active - 1].text
+        context['task_id'] = tasks_list[cur_active - 1].id
+        context['task_ans_type'] = tasks_list[cur_active - 1].ans_type
     return render(request, "tasks.html", context=context)
 
 
 def tests(request: HttpRequest, task_id: int) -> HttpResponse:
+    """ Tests for a task editing page. """
     handle_misc_actions(request)
     context: dict[str, Any] = {}
     context = init_login_context(request, context)
 
     try:
         task = Task.objects.get(id=task_id)
-    except:
+    except Exception:
         task = None
     if not task:
         return HttpResponseNotFound(_('<h1>Task not found</h1>'))
