@@ -16,6 +16,7 @@ from django_edu.models import Task
 from django_edu.models import Test
 from django_edu.checker import Checker
 
+
 def handle_misc_actions(request: HttpRequest) -> None:
     """
     Basically, base_page actions handler.
@@ -25,6 +26,7 @@ def handle_misc_actions(request: HttpRequest) -> None:
         action = request.POST.get('misc_action')
         if action == 'logout':
             auth.logout(request)
+
 
 def init_login_context(request: HttpRequest, context: dict[str, Any]) -> dict[str, Any]:
     """
@@ -37,12 +39,14 @@ def init_login_context(request: HttpRequest, context: dict[str, Any]) -> dict[st
         context['user_is_admin'] = request.user.groups.filter(name='teachers')
     return context
 
+
 def index(request: HttpRequest) -> HttpResponse:
     """ Index page. """
     handle_misc_actions(request)
     context: dict[str, Any] = {}
     context = init_login_context(request, context)
     return render(request, "index.html", context=context)
+
 
 def login(request: HttpRequest) -> HttpResponse:
     """ Login page. """
@@ -66,26 +70,28 @@ def login(request: HttpRequest) -> HttpResponse:
         context['auth_error'] = True
     return render(request, "login.html", context=context)
 
+
 def contests(request: HttpRequest) -> HttpResponse:
     """ Contests page. Here user choses a contest"""
     handle_misc_actions(request)
     context: dict[str, Any] = {}
     context = init_login_context(request, context)
 
-    if request.method == "POST":
-        new_contest_name = request.POST.get('new_contest_name')
-        contest_to_remove_id_str = request.POST.get('delete_contest')
-        if new_contest_name:
-            # process adding contest
+    if request.method == 'POST':
+        form_descr = request.POST.get('form_descr')
+        if form_descr == 'contest_add':
+            new_contest_name = request.POST.get('new_contest_name') or ''
             try:
                 new_contest = Contest()
                 new_contest.set_name(new_contest_name)
                 new_contest.save()
             except Contest.ContestNameError as e:
                 context['contest_name_error'] = str(e)
-        elif contest_to_remove_id_str:
-            # process contest deletion
-            Contest.objects.get(id=int(contest_to_remove_id_str)).delete()
+        elif form_descr == 'contest_delete':
+            contest_to_delete_id_str = request.POST.get('contest_to_delete_id')
+            if contest_to_delete_id_str is None:
+                raise RuntimeError('HTML Template is broken')
+            Contest.objects.get(id=int(contest_to_delete_id_str)).delete()
 
     context["contest_list"] = []
     for contest in Contest.objects.all():
@@ -93,6 +99,7 @@ def contests(request: HttpRequest) -> HttpResponse:
     if len(context["contest_list"]) == 0:
         context["contest_list_is_empty"] = True
     return render(request, "contests.html", context=context)
+
 
 def tasks(request: HttpRequest, contest_id: int, task_num: int = 0) -> HttpResponse:
     """ Tasks page. Represents selected contest. """

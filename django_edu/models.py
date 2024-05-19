@@ -28,7 +28,6 @@ class Contest(models.Model):
         """ Provide ability to detect specific error """
 
     MAX_NAME_LENGTH = 128
-    #id = models.IntegerField(primary_key=True, unique=True)
     tasks = models.JSONField(default=list)
     name = models.CharField(max_length=MAX_NAME_LENGTH)
 
@@ -36,6 +35,7 @@ class Contest(models.Model):
         """ Check and set contest name """
         if not isinstance(name, str):
             raise TypeError('"name" must be a string instance')
+        name = name.strip()
         if len(name) > self.MAX_NAME_LENGTH:
             raise self.ContestNameError(_('Too long name for a contest'))
         if len(name) == 0:
@@ -113,9 +113,8 @@ class Task(models.Model):
     MAX_NAME_LENGTH = 64
     MAX_TEXT_LENGTH = 1000
     MAX_ANS_LENGTH = 256
-    #id = models.IntegerField(primary_key=True, unique=True)
     name = models.CharField(max_length=MAX_NAME_LENGTH)
-    text= models.TextField(max_length=MAX_TEXT_LENGTH)
+    text = models.TextField(max_length=MAX_TEXT_LENGTH)
     ans_type = models.CharField(max_length=1,
                                 choices=AnsType.choices,
                                 default=AnsType.code)
@@ -138,6 +137,7 @@ class Task(models.Model):
         """ Check and set task name. """
         if not isinstance(name, str):
             raise TypeError('"name" must be a string instance')
+        name = name.strip()
         if len(name) > self.MAX_NAME_LENGTH:
             raise self.TaskNameError(_('Too long name for a task'))
         if len(name) == 0:
@@ -152,6 +152,7 @@ class Task(models.Model):
         """ Check and set task text (condition). """
         if not isinstance(text, str):
             raise TypeError('"text" must be a string instance')
+        text = text.strip()
         if len(text) > self.MAX_TEXT_LENGTH:
             raise self.TaskTextError(_('Too long text for a task'))
         if len(text) == 0:
@@ -161,7 +162,7 @@ class Task(models.Model):
             raise self.TaskTextError(_('Task text must not contain script'))
         html_parser = HTMLParser(strict=True)
         try:
-            html_parser.parse('<!DOCTYPE html><html>' + text +' </html>')
+            html_parser.parse('<!DOCTYPE html><html>' + text + ' </html>')
         except html5parser.ParseError as e:
             raise self.TaskTextError(_('HTML error: {err}').format(err=repr(e)))
         self.text = text

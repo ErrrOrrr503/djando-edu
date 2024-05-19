@@ -10,6 +10,7 @@ from django.utils.translation import gettext as _
 from django_edu.models import Task
 from django_edu.models import Test
 
+
 class AbstractTemplate(ABC):
     """
     Interface for a template.
@@ -19,6 +20,7 @@ class AbstractTemplate(ABC):
     @abstractmethod
     def to_html(self) -> str:
         """ Return html representation """
+
 
 class TemplateGlobalStatus(AbstractTemplate):
     """ A template for overall status of a task check. """
@@ -44,6 +46,7 @@ class TemplateGlobalStatus(AbstractTemplate):
             )
         return res
 
+
 class TemplateTestStatus(AbstractTemplate):
     """ A template for a single test status. """
     succeeded: bool
@@ -57,16 +60,17 @@ class TemplateTestStatus(AbstractTemplate):
         if self.succeeded is True:
             return _(
                 '<div class="container d-flex">'
-                    '<div>Test {n}: </div>'
-                    '<div class="text-ok">OK</div>'
+                '   <div>Test {n}: </div>'
+                '   <div class="text-ok">OK</div>'
                 '</div>'
             ).format(n=self.test_num)
         return _(
             '<div class="container d-flex">'
-                '<div>Test {n}: </div>'
-                '<div class="text-fail">FAIL</div>'
+            '   <div>Test {n}: </div>'
+            '   <div class="text-fail">FAIL</div>'
             '</div>'
         ).format(n=self.test_num)
+
 
 class TemplateTestReport(AbstractTemplate):
     """ A template for a test verbose report. """
@@ -80,25 +84,26 @@ class TemplateTestReport(AbstractTemplate):
     def to_html(self) -> str:
         return _(
             '<table class="table table-sm table-bordered-black">'
-                '<thead class="table-bordered-black">'
-                    '<tr class="table-bordered-black">'
-                        '<th class="table-bordered-black" scope="col">Received</th>'
-                        '<th class="table-bordered-black" scope="col">Expected</th>'
-                    '</tr>'
-                '</thead>'
-                '<tbody class="table-bordered-black">'
-                '<tr class="table-bordered-black">'
-                    '<td class="table-bordered-black">'
-                        '<span class="test-io-full multiline-text">{received}</span>'
-                    '</td>'
-                    '<td class="table-bordered-black">'
-                        '<span class="test-io-full multiline-text">{expected}</span>'
-                    '</td>'
-                '</tr>'
-                '</tbody>'
+            '   <thead class="table-bordered-black">'
+            '       <tr class="table-bordered-black">'
+            '           <th class="table-bordered-black" scope="col">Received</th>'
+            '           <th class="table-bordered-black" scope="col">Expected</th>'
+            '       </tr>'
+            '   </thead>'
+            '   <tbody class="table-bordered-black">'
+            '   <tr class="table-bordered-black">'
+            '       <td class="table-bordered-black">'
+            '           <span class="test-io-full multiline-text">{received}</span>'
+            '       </td>'
+            '       <td class="table-bordered-black">'
+            '           <span class="test-io-full multiline-text">{expected}</span>'
+            '       </td>'
+            '   </tr>'
+            '   </tbody>'
             '</table>'
         ).format(received=self.received_output,
                  expected=self.test.test_output)
+
 
 class Checker:
     """
@@ -132,7 +137,7 @@ class Checker:
             raise self.CheckerAnsException(_('Answer for a task must not be empty'))
         if task.ans_type == Task.AnsType.text:
             # None in ref_ans is impossible by Task design
-            passed = (ans.strip() == task.ref_ans.strip()) # type: ignore[union-attr]
+            passed = (ans.strip() == task.ref_ans.strip())  # type: ignore[union-attr]
             self.report.append(TemplateGlobalStatus(passed))
         elif task.ans_type == Task.AnsType.code:
             passed = True
@@ -163,11 +168,13 @@ class Checker:
         """
         timedout = False
         status = False
-        with (subprocess.Popen(args=['python3', '-c', code], stdin=subprocess.PIPE,
-                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT)) as proc:
+        with (subprocess.Popen(args=['python3', '-c', code],
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT)) as proc:
             try:
                 out, err = proc.communicate(input=test.test_input.encode('utf-8'),
-                                          timeout=3)
+                                            timeout=3)
             except subprocess.TimeoutExpired:
                 proc.kill()
                 out, err = proc.communicate()

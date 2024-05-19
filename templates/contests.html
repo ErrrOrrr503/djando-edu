@@ -18,7 +18,8 @@
     {% if user_is_admin %}
     <form method="post">
         {% csrf_token %}
-        <button type="submit" class="btn btn-sm btn-danger" name="delete_contest" id="delete_contest" value="{{ contest_id }}">Удалить</button>
+        <input type="hidden" name="form_descr" value="contest_delete"></input>
+        <button type="submit" class="btn btn-sm btn-danger" name="contest_to_delete_id" id="contest_to_delete_id" value="{{ contest_id }}">Удалить</button>
     </form>
     {% endif %}
 </li>
@@ -27,6 +28,7 @@
 <h3>Добавить новый контест</h3>
 <form method="post">
     {% csrf_token %}
+    <input type="hidden" name="form_descr" value="contest_add"></input>
     <label for="new_contest_name">Название</label>
     <input type="text" class="form-control input-default" name="new_contest_name" id="new_contest_name"></input>
     {% if contest_name_error %}
